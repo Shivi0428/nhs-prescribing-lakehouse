@@ -1,0 +1,26 @@
+# Default settings. Anything here can be overridden with an env var,
+# e.g. RXLAKE_LAKE_ROOT=abfss://lake@<account>.dfs.core.windows.net
+
+lake_root: ./lake            # bronze/silver/gold Delta tables live under here
+landing_root: ./landing      # raw CSVs as downloaded, before bronze
+
+source:
+  ckan_api: https://opendata.nhsbsa.net/api/3/action
+  dataset_id: english-prescribing-data-epd
+  # EPD resources are named EPD_YYYYMM on the CKAN portal
+  resource_prefix: EPD_
+  timeout_seconds: 60
+
+lookups:
+  # ODS GP practice file (headerless CSV). Optional - dim_practice still builds
+  # from the EPD columns if this isn't there.
+  ods_practices_path: ./landing/lookups/epraccur.csv
+
+quality:
+  # if true a failed expectation stops the run, otherwise it's just logged
+  fail_on_error: true
+  # rejected rows above this share of a month's input fails the silver step
+  max_reject_ratio: 0.01
+
+spark:
+  shuffle_partitions: 8

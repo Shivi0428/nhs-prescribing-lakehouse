@@ -1,0 +1,41 @@
+# Local run, no cloud account needed.
+#   docker compose build
+#   docker compose run --rm rxlake run 2024-01
+#   docker compose up airflow          # UI on http://localhost:8080 (admin / admin)
+
+x-rxlake-build: &rxlake-build
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+  volumes:
+    - ./data:/data
+
+services:
+  rxlake:
+    <<: *rxlake-build
+    image: rxlake:local
+
+  airflow:
+    image: apache/airflow:2.10.3-python3.11
+    depends_on: []
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+      RXLAKE_LAKE_ROOT: /data/lake
+      RXLAKE_LANDING_ROOT: /data/landing
+      _PIP_ADDITIONAL_REQUIREMENTS: ""
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./data:/data
+      - .:/app
+    ports:
+      - "8080:8080"
+    # The DAG shells out to `rxlake`; point it at the library mounted below.
+    # (For a production setup, build a custom image from docker/Dockerfile.)
+    command: >
+      bash -c "pip install --user -e /app &&
+               airflow db migrate &&
+               airflow users create --username admin --password admin
+                 --firstname a --lastname b --role Admin --email a@b.c || true;
+               airflow standalone"

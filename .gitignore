@@ -1,0 +1,17 @@
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+spark-warehouse/
+metastore_db/
+derby.log
+
+# local data - never commit the ~6GB monthly files
+data/
+lake/
+landing/
+*.csv
+!tests/**/*.csv
+.env
